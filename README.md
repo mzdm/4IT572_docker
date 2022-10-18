@@ -29,8 +29,23 @@ npm run wdio
 
 /* Deploy to Firebase */
 ./node_modules/.bin/firebase deploy --token=$FIREBASE_DEPLOY_TOKEN
+```
 
+### Docker commands
 
+```dockerfile
+docker image --help
+docker image build -t eshop:1 .
+docker image ls
+docker image history eshop:1
+docker image inspect eshop:1
+
+# Runs the container in detached mode, -p host_port:container_port. Opens http://localhost:3000
+docker container run -d -p 3000:3000 eshop:1
+docker container ls -a
+
+# Gets into running container
+docker exec -it eshop bin/bash
 ```
 
 ## About tests .
