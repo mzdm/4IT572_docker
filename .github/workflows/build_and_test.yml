@@ -17,10 +17,8 @@ jobs:
         with:
           node-version: 10
 
-      - name: Cache node modules
+      - name: Cache Node modules
         uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -44,10 +42,8 @@ jobs:
         with:
           node-version: 10
 
-      - name: Cache node modules
+      - name: Cache Node modules
         uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -56,6 +52,17 @@ jobs:
         run: |
           npm rebuild node-sass --force
           npm run build --colors
+
+      - name: Cache Node modules and build folder
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ./node_modules
+            ./build
+          key: ${{ runner.os }}-build-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-build-${{ github.run_id }}
 
   test:
     needs: install
@@ -71,10 +78,8 @@ jobs:
         with:
           node-version: 10
 
-      - name: Cache node modules
+      - name: Cache Node modules
         uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -82,3 +87,30 @@ jobs:
       - name: Run tests
         run: |
           npm run test
+
+  deploy:
+    needs: [ build, test ]
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      - name: Load Node modules and build folder from cache
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ./node_modules
+            ./build
+          key: ${{ runner.os }}-build-${{ github.run_id }}
+
+      - name: Deploy to Firebase
+        uses: lowply/deploy-firebase@v0.0.5
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_PROJECT: vse-4it572-devops
+
